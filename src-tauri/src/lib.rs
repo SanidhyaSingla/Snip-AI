@@ -1,10 +1,10 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-use std::process::Command; // Allows rust to spawn in commands
-use std::fs; // Standard file system(fs) module to read and delete files from your disk
-use base64::{Engine as _, engine::general_purpose}; // Functions to encode raw binary file data into a Base64 string
-use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, Code, Modifiers}; // Imports shortcut objects, keys, modifier flags so that OS routes keypresses to your app
-use tauri::{Manager, Emitter}; // Gives access to Tauri helper methods and Emitter trait for window.emit()
-use tokio;
+use std::fs; // Standard file system module to read/delete temp files
+use std::process::Command; // Spawns external CLI processes (screencapture)
+use base64::{engine::general_purpose, Engine as _}; // Encodes raw binary images to base64
+use tauri::{Emitter, Manager}; // Tauri core window management and emitting events
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut}; // Global shortcut management
+use tokio; // Async runtime
 
 #[tauri::command]
 fn greet(name: &str) -> String {
@@ -14,22 +14,22 @@ fn greet(name: &str) -> String {
 #[tauri::command]
 async fn capture_screen() -> Result<String, String> {
     tokio::task::spawn_blocking(|| {
-        let temp_path = "/tmp/snip_ai_ss.png"; // Where the OS will temporarily save the screenshoted file
+        let temp_path = "/tmp/snip_ai_ss.png"; // Temporary screenshot storage path
 
         let status = Command::new("screencapture")
-            .args(["-i", "-x", temp_path]) // -i is the crosshair tool letting you drag and select which part to clip. -x mutes the camera shutter sound. ? return an error immediately if the command fails to execute
+            .args(["-i", "-x", temp_path]) // -i: interactive drag region, -x: mute shutter sound
             .status()
             .map_err(|e| e.to_string())?;
 
         if !status.success() {
-            return Err("Screen capture failed".to_string()); // If we decide to press Escape or cancel the screenshot, the function exits with a non-zero status code, so we abort safely without reading a non-existent file
+            return Err("Screen capture failed".to_string()); // User hit Escape or canceled selection
         }
 
-        let image_bytes = fs::read(temp_path).map_err(|e| e.to_string())?; // Reads the PNG off disk into raw bytes so it remains temporary
-        let base64_image = general_purpose::STANDARD.encode(image_bytes); // Converts the bytes to Base64 string
-        let _ = fs::remove_file(temp_path); // Cleans up and deletes the temporary file
+        let image_bytes = fs::read(temp_path).map_err(|e| e.to_string())?; // Read image into memory
+        let base64_image = general_purpose::STANDARD.encode(image_bytes); // Convert to base64 string
+        let _ = fs::remove_file(temp_path); // Clean up temp file from disk
 
-        Ok(base64_image) // Gives the Base64 string back
+        Ok(base64_image)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -55,14 +55,14 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![greet, capture_screen])
         .setup(|app| {
-            // Control (⌃) + Option (⌥) + Spacebar
+            // Register Global Shortcut (Control + Option + Space)
             let snip_shortcut = Shortcut::new(
                 Some(Modifiers::CONTROL | Modifiers::ALT),
-                Code::Space
+                Code::Space,
             );
-
-            // Registers Ctrl + Option + Space globally with macOS
-            app.global_shortcut().register(snip_shortcut)?;
+            if let Err(err) = app.global_shortcut().register(snip_shortcut) {
+                eprintln!("Failed to register global shortcut: {}", err);
+            }
 
             Ok(())
         })

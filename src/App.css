@@ -1,10 +1,14 @@
+/* Core Reset & Full Window Bounds */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
+/* Ensure absolute transparency on Tauri window root */
+html,
+body,
+#root {
   margin: 0;
   padding: 0;
   width: 100vw;
@@ -12,4 +16,85 @@ html, body, #root {
   background: transparent !important;
   background-color: transparent !important;
   overflow: hidden;
+}
+
+/* Apple Native Typography Stack & Smoothing */
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11"; /* SF Pro alternate glyphs */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Base Body Text */
+body {
+  font-size: 13px;
+  line-height: 1.45;
+  letter-spacing: -0.006em;
+  color: rgba(255, 255, 255, 0.92);
+  user-select: none; /* Feels like a native app */
+}
+
+/* Apple-style Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.022em;
+  color: #ffffff;
+  margin: 0;
+}
+
+/* Monospace / Code Blocks (SF Mono / JetBrains Mono) */
+code, pre, kbd {
+  font-family: "SF Mono", SFMono-Regular, ui-monospace, "JetBrains Mono", Consolas, monospace;
+  font-size: 12px;
+  letter-spacing: -0.01em;
+}
+
+/* Highlighted Text Selection */
+::selection {
+  background: rgba(167, 139, 250, 0.35); /* Subtle purple accent */
+  color: #ffffff;
+}
+
+/* Custom Scrollbar for Markdown Content */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Typography Utility Classes */
+.text-caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+}
+
+.text-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #ffffff;
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #a78bfa 0%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

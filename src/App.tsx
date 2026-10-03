@@ -4,6 +4,10 @@ import "./App.css";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/core";
+import "katex/dist/katex.min.css";
+import ReactMarkdown from "react-markdown";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 
 export default function App() {
   const [apiKey, setApiKey] = useState("");
@@ -45,7 +49,7 @@ export default function App() {
     }
 
     try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2-flash:generateContent?key=${apiKey}`;
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`;
       const res = await fetch(url, { // await makes the code wait until the fetched data is received from the API
         method: "POST", // Telling google we are sending new data
         headers: { "Content-Type": "application/json" }, // Telling google it has JSON data
@@ -82,7 +86,7 @@ export default function App() {
       try {
         const base64Img = await invoke<string>("capture_screen");
         console.log("Screenshot base64 length:", base64Img.length);
-        // FIX: Save captured base64 string to React state so Gemini payload uses it!
+        // FIX: Save captured base64 string to React state so Gemini payload uses it
         setImageBase64(base64Img);
       } catch (err) {
         console.log("Capture state:", err);
@@ -199,7 +203,7 @@ export default function App() {
           color: "#fff",
           outline: "none",
           resize: "none",
-          fontSize: "13px",
+          fontSize: "14px",
         }}
       />
 
@@ -231,15 +235,18 @@ export default function App() {
             borderRadius: "8px",
             border: "1px solid rgba(255, 255, 255, 0.05)",
             overflowY: "auto",
-            fontSize: "13px",
+            fontSize: "14px",
             lineHeight: "1.5",
-            whiteSpace: "pre-wrap",
           }}
         >
-          <strong>Answer:</strong>
-          <p>{response}</p>
+          <strong style={{ color: "#a78bfa", display: "block", marginBottom: "6px" }}>
+            Answer:
+          </strong>
+          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+            {response}
+          </ReactMarkdown>
         </div>
-      )}
+)      }
     </div>
   );
 }
